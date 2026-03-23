@@ -8,6 +8,19 @@ export interface MidiEvent {
 	noteNumber?: number
 }
 
+export interface MidiSetTempoEvent {
+  deltaTime: number
+  type: 'meta'
+  subtype: 'setTempo'
+  microsecondsPerBeat: number
+}
+
+export interface MidiHeader {
+	formatType: number
+	trackCount: number
+	ticksPerBeat: number
+}
+
 export interface MidiEventWithSegment extends MidiEvent {
 	segment: number
 }
@@ -152,4 +165,38 @@ export function playFrame(
 	}, frames[index].deltaTime * tickSpeed );
 
 	// console.log( `Waiting for ${ frames[index].deltaTime * tempo } milliseconds` );
+}
+
+export function getTickSpeed(
+	ppq: number,
+	ticksPerBeat: number
+) {
+	const µsPerTick = ppq / ticksPerBeat
+	const msPerTick = µsPerTick / 1000
+
+	return msPerTick;
+}
+
+export function getTickSpeedFromBpm(
+	bpm: number,
+	ticksPerBeat: number
+) {
+	const ppq = getPpqFromBpm( bpm );
+	const tickSpeed = getTickSpeed( ppq, ticksPerBeat );
+
+	return tickSpeed;
+}
+
+export function getBpmFromPpq(
+	ppq: number // aka microsecondsPerBeat
+) {
+	const bpm = 60000000 / ppq;
+	return bpm;
+}
+
+export function getPpqFromBpm(
+	bpm: number
+) {
+	const ppq = 60000000 / bpm;
+	return ppq;
 }

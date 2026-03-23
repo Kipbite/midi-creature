@@ -1,14 +1,20 @@
 "use client"
 
 import { useEffect, useState } from "react";
-import { findNoteRange, getAnimationFrames, getNoteSegment, getNoteSegmentBorders, MidiEvent, MidiEventWithSegment, playFrame } from './lib';
+import { findNoteRange, getAnimationFrames, getBpmFromPpq, getNoteSegment, getNoteSegmentBorders, getTickSpeedFromBpm, MidiEvent, MidiEventWithSegment, playFrame } from './lib';
 
 interface Props {
 	events: MidiEvent[]
-	tickSpeed: number
+	ppq: number
+	ticksPerBeat: number
 }
 
-export default function Creature( { events, tickSpeed }: Props ) {
+export default function Creature( {
+	events,
+	ppq,
+	ticksPerBeat
+}: Props ) {
+	const [ bpm, setBpm ] = useState( getBpmFromPpq( ppq ) );
 	const [ imgSrc, setImgSrc ] = useState( '#' );
 
 	useEffect( () => {
@@ -44,10 +50,12 @@ export default function Creature( { events, tickSpeed }: Props ) {
 
 		const frames = getAnimationFrames( notes );
 
+		
+		const tickSpeed = getTickSpeedFromBpm( bpm, ticksPerBeat );
+		
 		console.log( 'tickSpeed: ', tickSpeed );
-
 		playFrame( frames, setImgSrc, tickSpeed );
-	}, [ events, tickSpeed ] );
+	}, [ bpm, events, ticksPerBeat ] );
 
 	return (
 		<img src={ imgSrc } />
