@@ -14,10 +14,11 @@ export default function Creature( {
 	ppq,
 	ticksPerBeat
 }: Props ) {
-	const [ bpm, setBpm ] = useState( getBpmFromPpq( ppq ) );
+	const [ backgroundColor, setBackgroundColor ] = useState( '#ff0000' );
 	const [ imgSrc, setImgSrc ] = useState( '#' );
-
+	
 	useEffect( () => {
+		const bpm = getBpmFromPpq( ppq );
 		const noteRange = findNoteRange( events );
 
 		if ( ! noteRange ) {
@@ -50,14 +51,32 @@ export default function Creature( {
 
 		const frames = getAnimationFrames( notes );
 
-		
 		const tickSpeed = getTickSpeedFromBpm( bpm, ticksPerBeat );
 		
 		console.log( 'tickSpeed: ', tickSpeed );
 		playFrame( frames, setImgSrc, tickSpeed );
-	}, [ bpm, events, ticksPerBeat ] );
+	}, [events, ppq, ticksPerBeat] );
 
 	return (
-		<img src={ imgSrc } />
+		<div style={{
+			width: '100vw',
+			height: '100vh',
+			background: backgroundColor
+		}}>
+			<img src={ imgSrc } style={{maxWidth: '100%'}} />
+			<div style={{ display: 'flex' }}>
+				<label>
+					BG Color:
+					<input
+						type="text"
+						value={ backgroundColor }
+						onChange={ e => {
+							setBackgroundColor( e.target.value );
+						} }
+					/>
+				</label>
+
+			</div>
+		</div>
 	);
 }
