@@ -151,7 +151,7 @@ export function playFrame(
 		return;
 	}
 
-	setTimeout( () => {
+	return setTimeout( () => {
 		if ( frames[index] ) {
 			// console.log( `Playing frame ${index}: ${frames[index].image}` )
 			updateImage( frames[index].image );

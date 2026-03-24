@@ -9,14 +9,9 @@ interface Props {
 	ticksPerBeat: number
 }
 
-export default function Creature( {
-	events,
-	ppq,
-	ticksPerBeat
-}: Props ) {
-	const [ backgroundColor, setBackgroundColor ] = useState( '#ff0000' );
+export default function Creature( { events, ppq, ticksPerBeat }: Props ) {
 	const [ imgSrc, setImgSrc ] = useState( '#' );
-	
+
 	useEffect( () => {
 		const bpm = getBpmFromPpq( ppq );
 		const noteRange = findNoteRange( events );
@@ -27,10 +22,6 @@ export default function Creature( {
 		}
 
 		const noteSegmentsBorders = getNoteSegmentBorders( noteRange );
-
-		console.log( 'noteRange: ', noteRange );
-
-		console.log( 'noteSegmentsBorders: ', noteSegmentsBorders );
 
 		const notes: MidiEventWithSegment[] = [];
 
@@ -52,31 +43,11 @@ export default function Creature( {
 		const frames = getAnimationFrames( notes );
 
 		const tickSpeed = getTickSpeedFromBpm( bpm, ticksPerBeat );
-		
-		console.log( 'tickSpeed: ', tickSpeed );
+
 		playFrame( frames, setImgSrc, tickSpeed );
-	}, [events, ppq, ticksPerBeat] );
+	}, [ events, ppq, ticksPerBeat ] );
 
 	return (
-		<div style={{
-			width: '100vw',
-			height: '100vh',
-			background: backgroundColor
-		}}>
-			<img src={ imgSrc } style={{maxWidth: '100%'}} />
-			<div style={{ display: 'flex' }}>
-				<label>
-					BG Color:
-					<input
-						type="text"
-						value={ backgroundColor }
-						onChange={ e => {
-							setBackgroundColor( e.target.value );
-						} }
-					/>
-				</label>
-
-			</div>
-		</div>
+		<img src={ imgSrc } style={{ maxWidth: '100%' }} />
 	);
 }
