@@ -1,4 +1,6 @@
-export interface MidiEvent {
+export type MidiEvent = MidiNoteEvent|MidiSetTempoEvent;
+
+export interface MidiNoteEvent {
 	deltaTime: number
 	type: string
 	subtype: string
@@ -21,76 +23,98 @@ export interface MidiHeader {
 	ticksPerBeat: number
 }
 
-export interface MidiEventWithSegment extends MidiEvent {
-	segment: number
+export interface MidiEventWithSegment extends MidiNoteEvent {
+	noteSegment: number
+	velocitySegment: number
 }
 
 export interface FoundNote {
-	noteNumber: number
+	note: string|number
 	eventIndex: number
 }
 
-export function findNoteRange( midiEvents: MidiEvent[] ):
+export interface FrameData {
+	deltaTime: number
+	image: string
+}
+
+export function findNoteRange(
+	midiEvents: MidiNoteEvent[],
+	key: keyof MidiNoteEvent
+):
 [ FoundNote, FoundNote ] | undefined
 {
 	if ( ! midiEvents || ! midiEvents[0] ) {
 		return;
 	}
 
-	let smallestNoteNumber: FoundNote | undefined = undefined;
-	let largestNoteNumber: FoundNote | undefined = undefined;
+	let smallest: FoundNote | undefined = undefined;
+	let largest: FoundNote | undefined = undefined;
 
 	midiEvents.forEach( ( event, i ) => {
-		if ( ! event.noteNumber ) {
+		if ( typeof event[key] === 'undefined' ) {
 			return;
 		}
 
-		if ( ! smallestNoteNumber || ! largestNoteNumber ) {
-			smallestNoteNumber = {
-				noteNumber: event.noteNumber,
+		if ( ! smallest || ! largest ) {
+			smallest = {
+				note: event[key],
 				eventIndex: i
 			};
 
-			largestNoteNumber = {
-				noteNumber: event.noteNumber,
-				eventIndex: i
-			};
-		}
-
-		if ( event.noteNumber < smallestNoteNumber.noteNumber ) {
-			smallestNoteNumber = {
-				noteNumber: event.noteNumber,
+			largest = {
+				note: event[key],
 				eventIndex: i
 			};
 		}
 
-		if ( event.noteNumber > largestNoteNumber.noteNumber ) {
-			largestNoteNumber = {
-				noteNumber: event.noteNumber,
+		if ( event[key] < smallest.note ) {
+			smallest = {
+				note: event[key],
+				eventIndex: i
+			};
+		}
+
+		if ( event[key] > largest.note ) {
+			largest = {
+				note: event[key],
 				eventIndex: i
 			};
 		}
 	} );
 
-	if ( ! smallestNoteNumber || ! largestNoteNumber ) {
+	if ( ! smallest || ! largest ) {
 		return;
 	}
 
-	return [ smallestNoteNumber, largestNoteNumber ];
+	return [ smallest, largest ];
 }
 
-export function getNoteSegmentBorders(
-	[ smallestNoteNumber, largestNoteNumber ]: [ FoundNote, FoundNote ],
+export function getSegmentBorders(
+	[ smallest, largest ]: [ FoundNote, FoundNote ],
 	segmentAmounts = 4
 ): [number, number][] {
-	const s = smallestNoteNumber.noteNumber;
-	const l = largestNoteNumber.noteNumber;
+	if ( typeof smallest.note === 'string' || typeof largest.note === 'string' ) {
+		throw new Error( 'Strings passed as smallest, largest' );
+	}
+
+	const s = smallest.note;
+	const l = largest.note;
+	
+	console.log( 's: ', s );
+	console.log( 'l: ', l );
 
 	const difference = l - s;
 
+	console.log( 'difference: ', difference );
+
 	const segmentSize = difference / segmentAmounts;
 
+	console.log( 'segmentSize: ', segmentSize );
+
 	const segments: [number, number][] = [];
+
+	console.log( 'segments: ', segments );
 
 	for ( let i = 1; i < segmentAmounts + 1; i++ ) {
 		segments.push( [
@@ -99,12 +123,14 @@ export function getNoteSegmentBorders(
 		] );
 	}
 
+	console.log( '--- ' );
+
 	return segments;
 }
 
 export function getNoteSegment(
 	note: number,
-	noteSegments: ReturnType<typeof getNoteSegmentBorders>
+	noteSegments: ReturnType<typeof getSegmentBorders>
 ) {
 	let foundSegmentIndex: number | undefined = undefined;
 
@@ -121,23 +147,37 @@ export function getNoteSegment(
 	return foundSegmentIndex;
 }
 
-export interface FrameData {
-	deltaTime: number
-	image: string
+export function areEyesClosed( event: MidiEventWithSegment ) {
+	return event.velocitySegment === 4 && event.subtype === 'noteOn';
 }
 
 export function getAnimationFrames( midiEvents: MidiEventWithSegment[] ) {
 	const frames: FrameData[] = [];
 
-	midiEvents.forEach( event => {
-		const openType = event.subtype === 'noteOn' ? 'open' : 'closed';
+	let shouldBlink = false;
+	midiEvents.forEach( ( event, i ) => {
+		const mouthOpenType = event.subtype === 'noteOn' ? 'open' : 'closed';
 
+		if ( i % 20 === 0 ) {
+			shouldBlink = true;
+		}
+
+		const blinking = shouldBlink && midiEvents[i-1]?.deltaTime > 50;
+
+		const eyesOpenType = areEyesClosed( event ) || blinking ? 'eyesclosed' : 'eyesopen';
+	
+		if ( blinking ) {
+			shouldBlink = false;
+		}
+		
 		frames.push( {
 			deltaTime: event.deltaTime,
-			image: `./images/${ event.segment }_${ openType }.png`
+			image: `./images/${ event.noteSegment }_${ mouthOpenType }_${ eyesOpenType }.png`
 		} );
-	} );
 
+	} );
+	
+	console.log( 'frames: ', frames );
 	return frames;
 }
 
@@ -199,4 +239,25 @@ export function getPpqFromBpm(
 ) {
 	const ppq = 60000000 / bpm;
 	return ppq;
+}
+
+export function findSetTempoEvent( events: MidiEvent[] ) {
+	const setTempoEvent = events.find(
+		event => event.subtype === 'setTempo'
+	);
+	return setTempoEvent as MidiSetTempoEvent;
+}
+
+export async function readFileFromUrl( url: string ) {
+	try {
+		const res = await fetch(url, {
+			headers: {
+				Accept: "audio/midi",
+			}
+		});
+		const blob = await res.blob();
+		return new File([blob], "midi-file");
+	} catch (e) {
+		return console.error(e);
+	}
 }

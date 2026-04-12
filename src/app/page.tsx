@@ -3,7 +3,7 @@
 import midiFileParser from 'midi-file-parser';
 import Creature from './Creature';
 import { useState } from 'react';
-import { MidiEvent } from './lib';
+import { findSetTempoEvent, MidiNoteEvent, MidiSetTempoEvent, readFileFromUrl } from './lib';
 import FileUpload from './FileUpload';
 import ColorPicker from '@rc-component/color-picker';
 import '@rc-component/color-picker/assets/index.css';
@@ -13,8 +13,8 @@ export default function Home() {
 	const [ file, setFile ] = useState<File>();
 	const [ ppq, setPpq ] = useState<number>();
 	const [ ticksPerBeat, setTicksPerBeat ] = useState<number>();
-	const [ events, setEvents ] = useState<MidiEvent[]>();
-	const [ backgroundColor, setBackgroundColor ] = useState( '#ff0000' );
+	const [ events, setEvents ] = useState<MidiNoteEvent[]>();
+	const [ backgroundColor, setBackgroundColor ] = useState( '#8e8282' );
 	const [ showPicker, setShowPicker ] = useState( false );
 
 	if ( ! file ) {
@@ -23,7 +23,19 @@ export default function Home() {
 			setFile( midiFile );
 		}
 
-		return <FileUpload handleUpload={ handleUpload } />;
+		async function handlePreset( url: string ) {
+			const fileData = await readFileFromUrl( url );
+			if ( ! fileData ) {
+				return;
+			}
+			setFile( fileData );
+		}
+
+		return (
+			<>
+				<FileUpload handleUpload={ handleUpload } />
+			</>
+		);
 	}
 
 	if ( ! ppq || ! ticksPerBeat || ! events ) {
@@ -31,8 +43,23 @@ export default function Home() {
 			const buffer = Buffer.from( arrayBuffer );
 			const string = buffer.toString( 'binary' );
 			const midi = midiFileParser( string );
-	
-			const ppq = midi.tracks[0][0].microsecondsPerBeat;
+
+			let setTempoEvent: MidiSetTempoEvent | null = null;
+			for ( const track of midi.tracks ) {
+				const found = findSetTempoEvent( track );
+				if ( found ) {
+					setTempoEvent = found;
+				}
+			}
+
+			if ( ! setTempoEvent ) {
+				console.error( 'Could not find setTempo event' );
+				return;
+			}
+
+			console.log( 'midi.tracks[1]: ', midi.tracks[1] );
+
+			const ppq = setTempoEvent.microsecondsPerBeat;
 			const { ticksPerBeat } = midi.header;
 	
 			setPpq( ppq );
