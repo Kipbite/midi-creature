@@ -4,7 +4,7 @@ interface Props {
 
 export default function FileUpload( { handleUpload }: Props ) {
 	return (
-		<div>
+		<div className="form-wrapper">
 			<form action={ handleUpload }>
 				<input
 					type="file"

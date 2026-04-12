@@ -7,6 +7,7 @@ import { findSetTempoEvent, MidiNoteEvent, MidiSetTempoEvent, readFileFromUrl } 
 import FileUpload from './FileUpload';
 import ColorPicker from '@rc-component/color-picker';
 import '@rc-component/color-picker/assets/index.css';
+import './style.css';
 
 
 export default function Home() {
@@ -14,7 +15,7 @@ export default function Home() {
 	const [ ppq, setPpq ] = useState<number>();
 	const [ ticksPerBeat, setTicksPerBeat ] = useState<number>();
 	const [ events, setEvents ] = useState<MidiNoteEvent[]>();
-	const [ backgroundColor, setBackgroundColor ] = useState( '#8e8282' );
+	const [ backgroundColor, setBackgroundColor ] = useState( '#ff0000' );
 	const [ showPicker, setShowPicker ] = useState( false );
 
 	if ( ! file ) {
