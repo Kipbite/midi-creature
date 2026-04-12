@@ -9,9 +9,8 @@ import ColorPicker from '@rc-component/color-picker';
 import '@rc-component/color-picker/assets/index.css';
 import './style.css';
 
-
 export default function Home() {
-	const [ file, setFile ] = useState<File>();
+const [ file, setFile ] = useState<File>();
 	const [ ppq, setPpq ] = useState<number>();
 	const [ ticksPerBeat, setTicksPerBeat ] = useState<number>();
 	const [ events, setEvents ] = useState<MidiNoteEvent[]>();
