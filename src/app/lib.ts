@@ -101,20 +101,11 @@ export function getSegmentBorders(
 	const s = smallest.note;
 	const l = largest.note;
 	
-	console.log( 's: ', s );
-	console.log( 'l: ', l );
-
 	const difference = l - s;
-
-	console.log( 'difference: ', difference );
 
 	const segmentSize = difference / segmentAmounts;
 
-	console.log( 'segmentSize: ', segmentSize );
-
 	const segments: [number, number][] = [];
-
-	console.log( 'segments: ', segments );
 
 	for ( let i = 1; i < segmentAmounts + 1; i++ ) {
 		segments.push( [
@@ -122,8 +113,6 @@ export function getSegmentBorders(
 			Math.floor( s + ( segmentSize * i ) )
 		] );
 	}
-
-	console.log( '--- ' );
 
 	return segments;
 }
@@ -165,19 +154,18 @@ export function getAnimationFrames( midiEvents: MidiEventWithSegment[] ) {
 		const blinking = shouldBlink && midiEvents[i-1]?.deltaTime > 50;
 
 		const eyesOpenType = areEyesClosed( event ) || blinking ? 'eyesclosed' : 'eyesopen';
-	
+
 		if ( blinking ) {
 			shouldBlink = false;
 		}
-		
+
 		frames.push( {
 			deltaTime: event.deltaTime,
 			image: `./images/${ event.noteSegment }_${ mouthOpenType }_${ eyesOpenType }.png`
 		} );
 
 	} );
-	
-	console.log( 'frames: ', frames );
+
 	return frames;
 }
 
@@ -193,7 +181,6 @@ export function playFrame(
 
 	return setTimeout( () => {
 		if ( frames[index] ) {
-			// console.log( `Playing frame ${index}: ${frames[index].image}` )
 			updateImage( frames[index].image );
 		} else {
 			console.error( `Frame ${ index } not found` );
@@ -203,8 +190,6 @@ export function playFrame(
 			playFrame( frames, updateImage, tickSpeed, index + 1 );
 		}
 	}, frames[index].deltaTime * tickSpeed );
-
-	// console.log( `Waiting for ${ frames[index].deltaTime * tempo } milliseconds` );
 }
 
 export function getTickSpeed(

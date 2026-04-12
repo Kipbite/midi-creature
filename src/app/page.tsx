@@ -57,8 +57,6 @@ export default function Home() {
 				return;
 			}
 
-			console.log( 'midi.tracks[1]: ', midi.tracks[1] );
-
 			const ppq = setTempoEvent.microsecondsPerBeat;
 			const { ticksPerBeat } = midi.header;
 	
