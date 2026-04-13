@@ -32,9 +32,27 @@ const [ file, setFile ] = useState<File>();
 		}
 
 		return (
-			<>
+			<div style={{
+				width: '100vw',
+				height: '100vh',
+				background: backgroundColor,
+				paddingTop: '50px'
+			}}>
+				<div className="form-wrapper">
 				<FileUpload handleUpload={ handleUpload } />
-			</>
+				<button onClick={() => setShowPicker( ! showPicker )}>
+						{ showPicker ? 'Hide' : 'Show' } BG Colour Picker
+					</button>
+					{ showPicker &&
+						<div style={{ display: 'flex' }}>
+							<ColorPicker
+								value={ backgroundColor }
+								onChange={ color => setBackgroundColor( color.toHexString() ) }
+							/>
+						</div>
+					}
+				</div>
+			</div>
 		);
 	}
 
